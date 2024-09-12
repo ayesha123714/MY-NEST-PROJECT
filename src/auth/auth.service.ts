@@ -20,6 +20,10 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendEmailOtpDto } from './dto/send-email-otp.dto';
 import { MailerService } from '../mailer/mailer.service';
+import { Console } from 'console';
+import * as nodemailer from 'nodemailer';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 
 @Injectable()
@@ -136,39 +140,41 @@ export class AuthService {
     };
   }
 
-  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<any> {
-    const { email } = forgotPasswordDto;
+  async forgotPassword(email: string): Promise<any> {
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
       throw new NotFoundException('User with this email not found');
     }
-    const otpMessage = 'OTP has been sent to your email address';
-    // let  { email } = sendEmailOtpDto;
-    let sendEmailOtpDto: SendEmailOtpDto = new SendEmailOtpDto();
-    sendEmailOtpDto.email = forgotPasswordDto.email;
-    const otp = await this.sendEmailOtp(sendEmailOtpDto);
-
-    return {
-      success: true,
-      message: `${otpMessage}`,
-      otp: otp.otp,
-    };
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp; await this.userRepository.save(user);
+    const emailSent = await this.mailerService.sendEmail(email, 'OTP', `Your otp is: ${otp}`);
+    
+    if(emailSent){
+      return {
+        message: `Password reset OTP has been sent to ${email}`,
+        otp: otp, 
+      };
+    }else{
+      throw new BadRequestException('There was an issue sending email');
+    }
+    
   }
+  
   // verfication of otp
 
   // message: OTP has been to sent to your email address
 
-  async sendEmailOtp(sendEmailOtpDto: SendEmailOtpDto): Promise<any> {
-    const { email } = sendEmailOtpDto;
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  // async sendEmailOtp(sendEmailOtpDto: SendEmailOtpDto): Promise<any> {
+  //   const { email } = sendEmailOtpDto;
+  //   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    await this.mailerService.sendEmail({
-      to: email,
-      subject: 'Your OTP Code',
-      context: { otp },
-    });
-    return { message: 'OTP has been sent to your email address', otp: otp };
-  }
+  //   await this.mailerService.sendEmail({
+  //     to: email,
+  //     subject: 'Your OTP Code',
+  //     context: { otp },
+  //   });
+  //   return { message: 'OTP has been sent to your email address', otp: otp };
+  // }
 
   //( method)
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<any> {
@@ -198,6 +204,9 @@ export class AuthService {
       data: user,
     };
   }
+
+
+  
 }
 
 //The login method verifies the user's email and password.

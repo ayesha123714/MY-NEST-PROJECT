@@ -1,54 +1,33 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PassportModule } from '@nestjs/passport';
-import { AuthModule } from './auth/auth.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { MailerModule } from '@nestjs-modules/mailer';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { JwtStrategy } from './auth/startegies/jwt.startegy'; // Corrected path for JwtStrategy
+import { AuthModule } from './auth/auth.module';
 import { UserEntity } from './entity/user.entity';
 import { MailerService } from './mailer/mailer.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-// import { MailerModule } from '@nestjs-modules/mailer';
-import { asapScheduler } from 'rxjs';
-//  import {Handlebars} from 'handlebars';
-import { strict } from 'assert';
-import { MailerModule } from '@nestjs-modules/mailer';
+import { validate } from './env.validate';
+import { PassportModules } from './passport/passport.module';
 
 @Module({
-  imports: [MailerModule.forRoot({
-    transport:{
-      host:'smtp.gmail.com',
-      auth:{
-        user: 'azizayesha454@gmail.com',
-              pass: 'ayesha123',
-      },
-    },
-  }),
-    // ConfigModule.forRoot(),
-    // MailerModule.forRootAsync({
-    //   imports: [ConfigModule],
-    //   inject: [ConfigService],
-    //   useFactory: async (ConfigService: ConfigService) => ({
-    //     transport: {
-    //       host: 'smtp.gmail.com',
-    //       port: '587',
-    //       auth: {
-    //         user: 'azizayesha342@gmail.com',
-    //         pass: 'ayesha123',
-    //       },
-    //     },
-    //     defaults: {
-    //       from: 'azizayesha961@gmail.com',
-    //     },
-    //     template: {
-    //       dir: process.cwd() + '/src/mail/templates',
-    //       options: {
-    //         strict: true,
-    //       },
-    //     },
-    //   }),
-  // / }),
-    PassportModule,
+  imports: [
+    ConfigModule.forRoot({
+      validate,
+      expandVariables: true,
+    }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('jwt.secret'),
+        signOptions: {
+          expiresIn: configService.get<string>('jwt.expiresIn'),
+        },
+      }),
+    }),
+    PassportModules,
     AuthModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -61,8 +40,17 @@ import { MailerModule } from '@nestjs-modules/mailer';
       synchronize: true, // Set to false in production
     }),
     TypeOrmModule.forFeature([UserEntity]),
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        auth: {
+          user: 'azizayesha454@gmail.com',
+          pass: 'ayesha123',
+        },
+      },
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService, JwtStrategy, MailerService],
+  providers: [AppService, MailerService],
 })
 export class AppModule {}

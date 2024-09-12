@@ -14,7 +14,6 @@ import {
 import { AuthService } from './auth.service';
 import { AuthPayloadDto } from './dto/auth.dto';
 import { Request } from 'express';
-import { JwtAuthGuard } from './guards/jwt.guard';
 import { signUpDto } from './dto/signup.dto';
 import { UserLoginDto } from './dto/login.dto';
 import { UserEntity } from 'src/entity/user.entity';
@@ -25,6 +24,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendEmailOtpDto } from './dto/send-email-otp.dto';
 import { MailerService } from '../mailer/mailer.service';
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guards';
 
 @Controller('auth')
 export class AuthController {
@@ -68,62 +68,22 @@ export class AuthController {
   ): Promise<any> {
     return await this.authService.deleteUser(id);
   }
-  @Post('forgot-Password')
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto): Promise<any> {
-    return this.authService.forgotPassword(forgotPasswordDto);
-  
-  }
+
+@Post('forgot-password')
+async forgotPassword(@Body('email') email: string) {
+  return this.authService.forgotPassword(email);
+}
+
  @Put('reset-password')
 async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
   return this.authService.resetPassword(resetPasswordDto);
 }
-@Post('sendEmailOtp')
-async sendEmailOtp(@Body() sendEmailOtpDto: SendEmailOtpDto): Promise<any> {
-  return this.authService.sendEmailOtp(sendEmailOtpDto);
+// @Post('sendEmailOtp')
+// async sendEmailOtp(@Body() sendEmailOtpDto: SendEmailOtpDto): Promise<any> {
+//   return this.authService.sendEmailOtp(sendEmailOtpDto);
+// }
 }
-}
 
-//  @Post('login')
-//  async login(@Body()  userLoginDto:UserLoginDto):Promise<any>{
-//   return await this.authService.login(UserLoginDto);
-//  }
-
-// import { Controller, Post, Body } from '@nestjs/common';
-// import { AuthService } from './auth.service'; // Ensure correct path
-// import { UserLoginDto } from './dto/login.dto';
-
-// @Controller('auth')
-// export class AuthController {
-//   constructor(private readonly authService: AuthService) {}
-
-//   @Post('login')
-//   async login(@Body() userLoginDto: UserLoginDto): Promise<any> {
-//     return this.authService.login(userLoginDto);
-//   }
-// }
-
-// catch(error){
-//   throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-// }
-
-// }
-
-//   @Post('/login')
-//   //method login
-//   login(@Body() authPayload: AuthPayloadDto) {
-//     console.log({authPayload})
-//     const user = this.authService.validateUser(authPayload);
-//      if(!user) throw new HttpException('invalid credentials',401);
-//     return user;
-//   }
-//   @Get('status')
-//   @UseGuards(JwtAuthGuard)
-//   status(@Req() req:Request){
-//     console.log('inside AuthController Status method');
-//     console.log(req.user);
-//     return req.user;
-//   }
-//  }
 
 //The entire code defines a secure route that only authenticated users (those with valid JWT tokens) can access. This structure is typical for protected routes in applications where certain resources or actions should only be available to authenticated users.
 

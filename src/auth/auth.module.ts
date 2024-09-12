@@ -1,33 +1,31 @@
-import { Module } from "@nestjs/common";
-import { AuthController } from "./auth.controller";
-import { AuthService } from "./auth.service";
-import { JwtModule } from "@nestjs/jwt";
-import { PassportModule } from "@nestjs/passport";
+import { Module } from '@nestjs/common';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 import * as dotenv from 'dotenv';
-
-import { JwtStrategy } from "./startegies/jwt.startegy";
-import{TypeOrmModule} from '@nestjs/typeorm';
-import { UserEntity } from "src/entity/user.entity";
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserEntity } from 'src/entity/user.entity';
 import { MailerService } from '../mailer/mailer.service';
-import { JwtAuthGuard } from "./guards/jwt.guard";
 
 dotenv.config();
 
 @Module({
-    imports:[PassportModule.register({defaultStrategy:'jwt',
-
+  imports: [
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: {
+        expiresIn: '1d',
+      },
     }),
-        JwtModule.register({
-            secret:process.env.JWT_SECRET,
-            signOptions:{expiresIn:'40d'},
-        }),
-        TypeOrmModule.forFeature([UserEntity]),
-    ],
-    controllers:[AuthController],
-    providers:[AuthService,JwtStrategy, MailerService,JwtAuthGuard],
-    exports:[AuthService],
+    TypeOrmModule.forFeature([UserEntity]),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, MailerService],
+  exports: [AuthService],
 })
-export class AuthModule{}
+export class AuthModule {}
 //Sure! This code defines a module in a NestJS application called AuthModule. Here’s what each part does:
 
 // Imports:

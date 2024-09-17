@@ -154,7 +154,8 @@ export class AuthService {
         message: `Password reset OTP has been sent to ${email}`,
         otp: otp, 
       };
-    }else{
+    }
+    else{
       throw new BadRequestException('There was an issue sending email');
     }
     
@@ -186,8 +187,9 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    // (Check if the new password is the same as the old one)
+    // (Check if the new password is the same as the old one) 
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    //(condition)
     if (isSamePassword) {
       throw new BadRequestException(
         'New password cannot be the same as the old one',

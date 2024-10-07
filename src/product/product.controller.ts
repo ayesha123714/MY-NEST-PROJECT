@@ -14,7 +14,7 @@ export class ProductController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
   @Post('create-product')
-  async createProduct(@Body() createProductDto: CreateProductDto,@Req() req: RequestWithUser ): Promise<ProductEntity> {
+  async createProduct(@Body() createProductDto: CreateProductDto): Promise<ProductEntity> {
     return await this.productService.create(createProductDto);
   }
 

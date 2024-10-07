@@ -3,28 +3,18 @@ import {
   Get,
   Post,
   Body,
-  HttpException,
-  Req,
   UseGuards,
-  HttpStatus,
   Param,
   Put,
   Delete,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { AuthPayloadDto } from './dto/auth.dto';
-import { Request } from 'express';
 import { signUpDto } from './dto/signup.dto';
 import { UserLoginDto } from './dto/login.dto';
-import { UserEntity } from 'src/entity/user.entity';
-
-import { DeleteUserDto } from './dto/delete.user.dto';
 import { UpdateUserDto } from './dto/update.user.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { SendEmailOtpDto } from './dto/send-email-otp.dto';
-import { MailerService } from '../mailer/mailer.service';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guards';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
@@ -39,43 +29,39 @@ export class AuthController {
     return this.authService.login(userLoginDto);
   }
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @Get('getAllUsers')
   async getAllUser(): Promise<any> {
     return await this.authService.getAllUsers();
   }
-  // @Get('getUserById/:id')
-  // async getUserById(@Param('id') id: string) {
-  //   return this.authService.getUserById(id);
-  // }
+ 
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth('JWT-auth')
   @Get('getUserById/:id')
    async getUserById(@Param('id') userId: string): Promise<any> {
     return await this.authService.getUserById(userId);
    }
 @UseGuards(JwtAuthGuard)
-  @Put('updateUser/:id')
-  async updateUser(
-    @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
-    updateUserDto.userid = id;
-    return await this.authService.updateUser(updateUserDto);
-  }
+@ApiBearerAuth('JWT-auth')
+@Put('updateUser/:id')
+async updateUser(
+  @Param('id') id: string, @Body() updateUserDto: UpdateUserDto ): Promise<any> {
+  return await this.authService.updateUser(id, updateUserDto); 
+}
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
   @Delete('deleteUser/:id')
-  async deleteUserById(
-    @Param('id') id: string,
-  ): Promise<any> {
+  async deleteUserById(@Param('id') id: string): Promise<any> {
     return await this.authService.deleteUser(id);
   }
 
 @Post('forgot-password')
-async forgotPassword(@Body('email') email: string) {
+async forgotPassword(@Body('email') email: string):Promise<any> {
   return this.authService.forgotPassword(email);
 }
 
  @Put('reset-password')
-async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+async resetPassword(@Body() resetPasswordDto: ResetPasswordDto):Promise<any> {
   return this.authService.resetPassword(resetPasswordDto);
 }
 // @Post('sendEmailOtp')

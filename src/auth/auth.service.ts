@@ -4,30 +4,24 @@ import {
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
-import { AuthPayloadDto } from './dto/auth.dto';
+
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from './interface/jwt-payload-interface';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserEntity } from 'src/entity/user.entity';
 import { signUpDto } from './dto/signup.dto';
 import * as bcrypt from 'bcrypt';
 import { UserLoginDto } from './dto/login.dto';
-import { Matches } from 'class-validator';
 import { UpdateUserDto } from './dto/update.user.dto';
-import { DeleteUserDto } from './dto/delete.user.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
-import { SendEmailOtpDto } from './dto/send-email-otp.dto';
 import { MailerService } from '../mailer/mailer.service';
-import { Console } from 'console';
-import * as nodemailer from 'nodemailer';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
 
 @Injectable()
 export class AuthService {
+  productRepository: any;
   constructor(
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService,
@@ -76,7 +70,7 @@ export class AuthService {
     if (!isMatch) {
       throw new UnauthorizedException('Invalid password');
     }
-    const payload = { username: user.username, sub: user.id };
+    const payload = { username: user.username, userId: user.id };
     const access_token = this.jwtService.sign(payload);
     const userId = user.id;
     return { userId, username, email, access_token };
@@ -87,6 +81,7 @@ export class AuthService {
   }
 
   async getUserById(userId: string): Promise<any> {
+    
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
@@ -101,38 +96,33 @@ export class AuthService {
       data: user,
     };
   }
-
-  async updateUser(updateUserDto: UpdateUserDto): Promise<any> {
-    let user = await this.userRepository.findOne({
-      where: { id: updateUserDto.userid },
+  async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<any> {
+    const user = await this.userRepository.findOne({
+      where: { id },
     });
-
     if (!user) {
-      throw new NotFoundException(
-        `This user with ID ${updateUserDto.userid} does not exist`,
-      );
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
-    
     user.username = updateUserDto.username || user.username;
     user.email = updateUserDto.email || user.email;
     user.updatedAt = new Date();
-    await this.userRepository.save(user);
-
+    await this.userRepository.save(user);  
     return {
       success: true,
       message: 'User updated successfully',
       data: user,
     };
   }
-
+  
+  
+  
   async deleteUser(userId: string): Promise<any> {
-    const result = await this.userRepository.delete(userId);
-
-    if (result.affected === 0) {
-      throw new NotFoundException(
-        `This user with ID ${userId} does not exist`,
-      );
-    }
+    const finduser = await this.userRepository.findOne({
+      where: { id: userId } 
+    });
+    const user = await this.userRepository.delete(userId)
+    if(!finduser)
+      throw new NotFoundException('This user with ID ${userId} does not exist')
 
     return {
       success: true,
@@ -177,29 +167,19 @@ export class AuthService {
   //   return { message: 'OTP has been sent to your email address', otp: otp };
   // }
 
-  //( method)
   async resetPassword(resetPasswordDto: ResetPasswordDto): Promise<any> {
     const { email, newPassword } = resetPasswordDto;
-
-    // (Find the user by email)
     const user = await this.userRepository.findOne({ where: { email } });
     if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // (Check if the new password is the same as the old one) 
+      throw new NotFoundException('User not found');    }
     const isSamePassword = await bcrypt.compare(newPassword, user.password);
-    //(condition)
     if (isSamePassword) {
       throw new BadRequestException(
         'New password cannot be the same as the old one',
       );
     }
-
-    // (Hash the new password and update the user record)
     user.password = await bcrypt.hash(newPassword, 10);
     await this.userRepository.save(user);
-
     return {
       success: true,
       message: 'Password reset successfully',

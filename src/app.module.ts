@@ -6,13 +6,15 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
-import { UserEntity } from './entity/user.entity';
 import { MailerService } from './mailer/mailer.service';
 import { validate } from './env.validate';
 import { PassportModules } from './passport/passport.module';
+import { ProductModule } from './product/product.module'
+import { EntityModule } from './entity/entity.module';
 
 @Module({
-  imports: [
+  imports: [ProductModule, 
+    AuthModule,
     ConfigModule.forRoot({
       validate,
       expandVariables: true,
@@ -36,21 +38,23 @@ import { PassportModules } from './passport/passport.module';
       username: 'postgres',
       password: 'ayesha',
       database: 'postgres',
-      entities: [UserEntity],
-      synchronize: true, // Set to false in production
+      entities: [__dirname + '/**/*.entity.{js,ts}'],
+      synchronize: true, 
     }),
-    TypeOrmModule.forFeature([UserEntity]),
+    EntityModule,
     MailerModule.forRoot({
       transport: {
         host: 'smtp.gmail.com',
         auth: {
-          user: 'azizayesha454@gmail.com',
-          pass: 'ayesha123',
+          user: 'azizayesha961@gmail.com',
+          pass: 'ayesha1234',
         },
       },
     }),
   ],
   controllers: [AppController],
   providers: [AppService, MailerService],
+ 
+
 })
 export class AppModule {}

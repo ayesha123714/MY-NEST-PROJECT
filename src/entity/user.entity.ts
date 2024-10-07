@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn, } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+
 
 @Entity('users')
 export class UserEntity {
@@ -20,3 +21,4 @@ export class UserEntity {
   otp: string;
 }
 
+ 

@@ -20,14 +20,26 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(payload: JwtPayload): Promise<UserEntity> {
+  // async validate(payload: JwtPayload): Promise<UserEntity> {
+  //   const { userId } = payload;
+  //   const user = await this.userRepository.findOne({
+  //     where: { id: userId },
+  //   });
+  //   if (!user) {
+  //     throw new UnauthorizedException();
+  //   }
+  //   return user;
+  // }
+  
+  async validate(payload: JwtPayload): Promise<{ userId: string, username: string }> {
     const { userId } = payload;
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
+  
     if (!user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('User not found');
     }
-    return user;
+    return { userId: user.id, username: user.username };
   }
 }
